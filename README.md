@@ -41,7 +41,7 @@ curl -X POST --data 'code={CODE}&client_id={CLIENT_ID}&client_secret={CLIENT_SEC
 
 ```shell
 /bin/bash createAlbum.sh .env.dev
-# レスポンスのidを.envファイルのGOOGLE_ALBUM_IDに指定してください
+# レスポンスのidを.envファイルのG_ALBUM_IDに指定してください
 ```
 
 ## 環境変数
@@ -49,13 +49,13 @@ curl -X POST --data 'code={CODE}&client_id={CLIENT_ID}&client_secret={CLIENT_SEC
 以下をそれぞれ設定してください。
 
 ```
-LINE_CHANNEL_SECRET=
-LINE_CHANNEL_ACCESS_TOKEN=
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_REFRESH_TOKEN=
-GOOGLE_ALBUM_ID=
-GOOGLE_ALBUM_NAME=
+L_CHANNEL_SECRET=
+L_CHANNEL_ACCESS_TOKEN=
+G_CLIENT_ID=
+G_CLIENT_SECRET=
+G_REFRESH_TOKEN=
+G_ALBUM_ID=
+G_ALBUM_NAME=
 ```
 
 ## テスト

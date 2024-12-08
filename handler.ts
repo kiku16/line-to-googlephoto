@@ -9,17 +9,17 @@ dotenv.config();
 
 // create LINE SDK config from env variables
 const config = {
-  channelSecret: process.env.CHANNEL_SECRET || '',
+  channelSecret: process.env.L_CHANNEL_SECRET || '',
 };
 line.middleware(config)
 
 // create LINE SDK client
 const client = new line.Client({
-  channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN || ''
+  channelAccessToken: process.env.L_CHANNEL_ACCESS_TOKEN || ''
 });
-// console.log("CHANNEL_ACCESS_TOKEN", process.env.CHANNEL_ACCESS_TOKEN);
+console.log("L_CHANNEL_ACCESS_TOKEN", process.env.L_CHANNEL_ACCESS_TOKEN);
 
-const albumId = process.env.ALBUM_ID || '';
+const albumId = process.env.G_ALBUM_ID || '';
 
 const extractBody = (event: APIGatewayProxyEvent): any => {
   console.log("Received event:", JSON.stringify(event, null, 2));

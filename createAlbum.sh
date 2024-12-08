@@ -19,7 +19,7 @@ then
 fi
 
 # curl コマンドを実行し、結果を変数に保存
-response=$(curl -X POST https://www.googleapis.com/oauth2/v4/token -H "Content-Type: application/json" -d "{\"refresh_token\":\"$REFRESH_TOKEN\",\"client_id\":\"$CLIENT_ID\",\"client_secret\":\"$CLIENT_SECRET\",\"grant_type\": \"refresh_token\"}")
+response=$(curl -X POST https://www.googleapis.com/oauth2/v4/token -H "Content-Type: application/json" -d "{\"refresh_token\":\"$G_REFRESH_TOKEN\",\"client_id\":\"$G_CLIENT_ID\",\"client_secret\":\"$G_CLIENT_SECRET\",\"grant_type\": \"refresh_token\"}")
 
 # curl コマンドのエラーハンドリング
 if [ $? -ne 0 ]; then
@@ -40,7 +40,7 @@ if [ -z "$access_token" ]; then
 fi
 
 # Google Photos のアルバムを作成
-album_response=$(curl -X POST https://photoslibrary.googleapis.com/v1/albums -H "Authorization: Bearer $access_token" -H "Content-Type: application/json" -d "{\"album\":{\"title\":\"$ALBUM_NAME\"}}")
+album_response=$(curl -X POST https://photoslibrary.googleapis.com/v1/albums -H "Authorization: Bearer $access_token" -H "Content-Type: application/json" -d "{\"album\":{\"title\":\"$G_ALBUM_NAME\"}}")
 
 # 作成したアルバムの情報をデバッグ出力
 echo "Album Response: $album_response"

@@ -12,12 +12,12 @@ provider:
   runtime: nodejs20.x
   stage: ${opt:stage, 'dev'}
   environment:
-    CHANNEL_SECRET: ${env:CHANNEL_SECRET}
-    CHANNEL_ACCESS_TOKEN: ${env:CHANNEL_ACCESS_TOKEN}
-    CLIENT_ID: ${env:CLIENT_ID}
-    CLIENT_SECRET: ${env:CLIENT_SECRET}
-    REFRESH_TOKEN: ${env:REFRESH_TOKEN}
-    ALBUM_ID: ${env:ALBUM_ID}
+    L_CHANNEL_SECRET: ${env:L_CHANNEL_SECRET}
+    L_CHANNEL_ACCESS_TOKEN: ${env:L_CHANNEL_ACCESS_TOKEN}
+    G_CLIENT_ID: ${env:G_CLIENT_ID}
+    G_CLIENT_SECRET: ${env:G_CLIENT_SECRET}
+    G_REFRESH_TOKEN: ${env:G_REFRESH_TOKEN}
+    G_ALBUM_ID: ${env:G_ALBUM_ID}
 
 functions:
   callback:

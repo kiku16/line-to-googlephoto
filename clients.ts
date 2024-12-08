@@ -44,9 +44,9 @@ export class GoogleApi extends HttpClient {
    */
   public async getAccessToken(): Promise<any> {
     return this.request('POST', '/oauth2/v4/token', null, {
-      refresh_token: process.env.REFRESH_TOKEN,
-      client_id: process.env.CLIENT_ID,
-      client_secret: process.env.CLIENT_SECRET,
+      refresh_token: process.env.G_REFRESH_TOKEN,
+      client_id: process.env.G_CLIENT_ID,
+      client_secret: process.env.G_CLIENT_SECRET,
       grant_type: 'refresh_token',
     });
   }
