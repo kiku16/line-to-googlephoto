@@ -60,8 +60,10 @@ export const callback = async (event: APIGatewayProxyEvent): Promise<APIGatewayP
       const uploadToken = await photo.uploadImage(jwt.access_token, timestamp, image, mediaType);
       uploadTokens.push(uploadToken);
     }
-    const res = await photo.addImagesToAlbum(jwt.access_token, albumId, uploadTokens);
-    console.log("res:", res);
+    if (uploadTokens.length > 0) {
+      const res = await photo.addImagesToAlbum(jwt.access_token, albumId, uploadTokens);
+      console.log("res:", res);
+    }
 
     return {
       statusCode: 200,
