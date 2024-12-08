@@ -1,0 +1,31 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: kiku16
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: line-to-googlephoto
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: line-to-googlephoto
+
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}
+  environment:
+    CHANNEL_SECRET: ${env:CHANNEL_SECRET}
+    CHANNEL_ACCESS_TOKEN: ${env:CHANNEL_ACCESS_TOKEN}
+    CLIENT_ID: ${env:CLIENT_ID}
+    CLIENT_SECRET: ${env:CLIENT_SECRET}
+    REFRESH_TOKEN: ${env:REFRESH_TOKEN}
+    ALBUM_ID: ${env:ALBUM_ID}
+
+functions:
+  callback:
+    handler: handler.callback
+    events:
+      - httpApi:
+          path: /
+          method: post
+
+plugins:
+  - serverless-offline
