@@ -18,6 +18,8 @@ provider:
     G_CLIENT_SECRET: ${env:G_CLIENT_SECRET}
     G_REFRESH_TOKEN: ${env:G_REFRESH_TOKEN}
     G_ALBUM_ID: ${env:G_ALBUM_ID}
+    START_DATETIME: ${env:START_DATETIME}
+    END_DATETIME: ${env:END_DATETIME}
 
 functions:
   callback:
@@ -26,6 +28,8 @@ functions:
       - httpApi:
           path: /
           method: post
+    timeout: 180
+    memorySize: 512
 
 plugins:
   - serverless-offline

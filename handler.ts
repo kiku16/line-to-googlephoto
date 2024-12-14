@@ -17,7 +17,7 @@ line.middleware(config)
 const client = new line.Client({
   channelAccessToken: process.env.L_CHANNEL_ACCESS_TOKEN || ''
 });
-console.log("L_CHANNEL_ACCESS_TOKEN", process.env.L_CHANNEL_ACCESS_TOKEN);
+// console.log("L_CHANNEL_ACCESS_TOKEN", process.env.L_CHANNEL_ACCESS_TOKEN);
 
 const albumId = process.env.G_ALBUM_ID || '';
 
@@ -40,7 +40,23 @@ const streamToBuffer = (stream: Readable): Promise<Buffer> => {
   });
 };
 
+const startDatetime = new Date(process.env.START_DATETIME || new Date());
+const endDatetime = new Date(process.env.END_DATETIME || new Date());
+
+const isWithinDatetimeRange = (): boolean => {
+  const now = new Date();
+  return endDatetime > now && now >= startDatetime;
+};
+
 export const callback = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  if (!isWithinDatetimeRange()) {
+    console.log("Request is outside of allowed datetime range");
+    return {
+      statusCode: 403,
+      body: JSON.stringify({ message: 'Request is outside of allowed datetime range' }),
+    };
+  }
+
   try {
     const google = new GoogleApi();
     const photo = new GooglePhotoApi();
