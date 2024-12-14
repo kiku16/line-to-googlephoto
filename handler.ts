@@ -7,8 +7,13 @@ dotenv.config();
 
 const albumId = process.env.G_ALBUM_ID || '';
 const startDatetime = new Date(process.env.START_DATETIME || new Date());
-const endDatetime = new Date(process.env.END_DATETIME || new Date());
+const endDatetime = new Date(process.env.END_DATETIME || new Date(new Date().getTime() + 60 * 60 * 1000));
 
+/**
+ * Extracts the body from the API Gateway event.
+ * @param event The API Gateway event.
+ * @returns The parsed body.
+ */
 const extractBody = (event: APIGatewayProxyEvent): any => {
   console.log("Received event:", JSON.stringify(event, null, 2));
   let body = event.body;
@@ -19,11 +24,24 @@ const extractBody = (event: APIGatewayProxyEvent): any => {
   return body ? JSON.parse(body) : {};
 }
 
+/**
+ * Checks if the current datetime is within the allowed range.
+ * @returns True if within range, false otherwise.
+ */
 const isWithinDatetimeRange = (): boolean => {
   const now = new Date();
   return endDatetime > now && now >= startDatetime;
 };
 
+/**
+ * Polls the transcoding status of a message.
+ * @param line The LINE client instance.
+ * @param messageId The ID of the message.
+ * @param interval The polling interval in milliseconds.
+ * @param maxAttempts The maximum number of attempts.
+ * @returns The transcoding status.
+ * @throws If transcoding does not succeed within the allowed attempts.
+ */
 const pollTranscodingStatus = async (line: Line, messageId: string, interval: number, maxAttempts: number): Promise<any> => {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const transcodingStatus = await line.getMessageContentTranscodingByMessageId(messageId);
@@ -39,6 +57,11 @@ const pollTranscodingStatus = async (line: Line, messageId: string, interval: nu
   throw new Error('Transcoding did not succeed within the allowed attempts');
 };
 
+/**
+ * Lambda function handler for processing LINE messages and uploading to Google Photos.
+ * @param event The API Gateway event.
+ * @returns The API Gateway response.
+ */
 export const callback = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   if (!isWithinDatetimeRange()) {
     console.log("Request is outside of allowed datetime range");

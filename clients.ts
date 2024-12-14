@@ -7,6 +7,11 @@ export enum MediaType {
   VIDEO = 'mp4',
 }
 
+/**
+ * Converts a readable stream to a buffer.
+ * @param stream The readable stream to convert.
+ * @returns A promise that resolves to a buffer.
+ */
 export const streamToBuffer = (stream: Readable): Promise<Buffer> => {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
@@ -16,6 +21,9 @@ export const streamToBuffer = (stream: Readable): Promise<Buffer> => {
   });
 };
 
+/**
+ * Class representing the LINE API client.
+ */
 export class Line {
   protected readonly client: line.messagingApi.MessagingApiBlobClient;
 
@@ -35,16 +43,29 @@ export class Line {
 
   }
 
+  /**
+   * Retrieves the content of a message by its ID.
+   * @param messageId The ID of the message.
+   * @returns A promise that resolves to a buffer containing the message content.
+   */
   public async getMessageContent(messageId: string): Promise<Buffer> {
     const stream = await this.client.getMessageContent(messageId);
     return streamToBuffer(stream);
   }
 
+  /**
+   * Retrieves the transcode status of a message by its ID.
+   * @param messageId The ID of the message.
+   * @returns A promise that resolves to the transcoded message content.
+   */
   public async getMessageContentTranscodingByMessageId(messageId: string): Promise<any> {
     return this.client.getMessageContentTranscodingByMessageId(messageId);
   }
 }
 
+/**
+ * Class representing a generic HTTP client.
+ */
 class HttpClient {
   protected readonly baseUrl: string;
 
@@ -52,6 +73,15 @@ class HttpClient {
     this.baseUrl = baseUrl;
   }
 
+  /**
+   * Makes an HTTP request.
+   * @param method The HTTP method.
+   * @param url The URL to request.
+   * @param data The data to send with the request.
+   * @param params The URL parameters to send with the request.
+   * @param headers The headers to send with the request.
+   * @returns A promise that resolves to the response data.
+   */
   public async request(method: string, url: string, data?: any, params?: any, headers?: any): Promise<any> {
     try {
       const response = await axios({
@@ -73,14 +103,17 @@ class HttpClient {
   }
 }
 
+/**
+ * Class representing the Google API client.
+ */
 export class GoogleApi extends HttpClient {
   constructor() {
     super('https://www.googleapis.com');
   }
 
   /**
-   * [getAccessToken アクセストークンを取得する]
-   * @return {Promise<any>} [Promise]
+   * Retrieves an access token.
+   * @returns A promise that resolves to the access token.
    */
   public async getAccessToken(): Promise<any> {
     return this.request('POST', '/oauth2/v4/token', null, {
@@ -92,19 +125,21 @@ export class GoogleApi extends HttpClient {
   }
 }
 
+/**
+ * Class representing the Google Photos API client.
+ */
 export class GooglePhotoApi extends HttpClient {
   constructor() {
     super('https://photoslibrary.googleapis.com');
   }
 
   /**
-   * [uploadImage 画像アップロード]
-   * https://developers.google.com/photos/library/guides/upload-media#uploading-bytes
-   * @param  {string}       accessToken [アクセストークン]
-   * @param  {number}       timestamp   [タイムスタンプ（画像のファイル名に使います）]
-   * @param  {binary}       image       [画像ファイル]
-   * @param  {MediaType}    mediaType   [メディアタイプ（画像または動画）]
-   * @return {Promise<any>}             [Promise]
+   * Uploads an image to Google Photos.
+   * @param accessToken The access token.
+   * @param timestamp The timestamp to use in the image file name.
+   * @param image The image file.
+   * @param mediaType The media type (image or video).
+   * @returns A promise that resolves to the upload response.
    */
   public async uploadImage(accessToken: string, timestamp: number, image: Buffer, mediaType: MediaType): Promise<any> {
     return this.request('POST', '/v1/uploads', image, null, {
@@ -116,11 +151,11 @@ export class GooglePhotoApi extends HttpClient {
   }
 
   /**
-   * [addImagesToAlbum アップロードした写真をアルバムに追加]
-   * @param  {string}       albumToken  [アルバムトークン]
-   * @param  {string[]}     imageTokens [アップロードトークンの配列]
-   * @param  {string}       accessToken [アクセストークン]
-   * @return {Promise<any>}             [Promise]
+   * Adds uploaded images to an album.
+   * @param albumToken The album token.
+   * @param imageTokens The array of upload tokens.
+   * @param accessToken The access token.
+   * @returns A promise that resolves to the response.
    */
   public async addImagesToAlbum(accessToken: string, albumToken: string, imageTokens: string[]): Promise<any> {
     const newMediaItems = imageTokens.map(token => ({
