@@ -21,6 +21,8 @@ OAuth 2.0 クライアント IDをウェブアプリケーションで設定し�
 承認済みのリダイレクトURIには`http://localhost:3000`を指定してください。
 - https://console.cloud.google.com/projectselector2/apis/credentials
 
+また、アプリがテストの公開ステータスの場合、7日でrefresh_tokenが切れるため、本番環境へ設定してください。
+
 ### REFRESH_TOKENを手動で生成
 1. OAuth 同意画面 から、テストユーザーにGoogle Photoのアカウントメールアドレスを指定します。
 2. ブラウザで以下にアクセス。CLIENT_IDはGoogleCloudから取得
@@ -46,7 +48,7 @@ curl -X POST --data 'code={CODE}&client_id={CLIENT_ID}&client_secret={CLIENT_SEC
 
 ## 環境変数
 
-以下をそれぞれ設定してください。
+以下をそれぞれ自らの値で設定してください。
 
 ```
 L_CHANNEL_SECRET=
@@ -56,6 +58,8 @@ G_CLIENT_SECRET=
 G_REFRESH_TOKEN=
 G_ALBUM_ID=
 G_ALBUM_NAME=
+START_DATETIME=2025-01-01T00:00:00+09:00
+END_DATETIME=2025-01-01T00:00:00+09:00
 ```
 
 ## テスト
@@ -74,6 +78,12 @@ sls deploy --stage dev
 # sls deploy --stage prod
 ```
 
+## ログ確認
+
+```
+sls logs --stage dev --function callback
+```
+
 ## 他
 
-APIは公開されるため、制限を行いたい場合は別途設定を追加してください。
+lambda APIは公開されるため、制限を行いたい場合は別途設定を追加してください。
