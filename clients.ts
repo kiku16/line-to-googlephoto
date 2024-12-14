@@ -1,8 +1,48 @@
+import * as line from '@line/bot-sdk';
 import axios from 'axios';
+import Readable from 'stream';
 
 export enum MediaType {
   IMAGE = 'jpg',
   VIDEO = 'mp4',
+}
+
+export const streamToBuffer = (stream: Readable): Promise<Buffer> => {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    stream.on('data', (chunk) => chunks.push(chunk));
+    stream.on('end', () => resolve(Buffer.concat(chunks)));
+    stream.on('error', reject);
+  });
+};
+
+export class Line {
+  protected readonly client: line.messagingApi.MessagingApiBlobClient;
+
+  constructor() {
+
+    // create LINE SDK config from env variables
+    const config = {
+      channelSecret: process.env.L_CHANNEL_SECRET || '',
+    };
+    line.middleware(config)
+
+    // create LINE SDK client
+    this.client = new line.messagingApi.MessagingApiBlobClient({
+      channelAccessToken: process.env.L_CHANNEL_ACCESS_TOKEN || ''
+    });
+    // console.log("L_CHANNEL_ACCESS_TOKEN", process.env.L_CHANNEL_ACCESS_TOKEN);
+
+  }
+
+  public async getMessageContent(messageId: string): Promise<Buffer> {
+    const stream = await this.client.getMessageContent(messageId);
+    return streamToBuffer(stream);
+  }
+
+  public async getMessageContentTranscodingByMessageId(messageId: string): Promise<any> {
+    return this.client.getMessageContentTranscodingByMessageId(messageId);
+  }
 }
 
 class HttpClient {

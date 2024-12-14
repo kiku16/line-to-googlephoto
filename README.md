@@ -71,6 +71,8 @@ sls offline --stage dev
 curl -X POST -d @event-body.json http://localhost:3000
 ```
 
+なお、vscodeから`Debug Serverless Offline`を実行することで、debug実行することが可能。
+
 ## デプロイ
 
 ```shell

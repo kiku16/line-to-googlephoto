@@ -1,25 +1,13 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import * as line from '@line/bot-sdk';
 import * as dotenv from 'dotenv';
-import { GoogleApi, GooglePhotoApi, MediaType } from './clients';
-import Readable from 'stream';
+import { GoogleApi, GooglePhotoApi, MediaType, Line } from './clients';
 
 
 dotenv.config();
 
-// create LINE SDK config from env variables
-const config = {
-  channelSecret: process.env.L_CHANNEL_SECRET || '',
-};
-line.middleware(config)
-
-// create LINE SDK client
-const client = new line.Client({
-  channelAccessToken: process.env.L_CHANNEL_ACCESS_TOKEN || ''
-});
-// console.log("L_CHANNEL_ACCESS_TOKEN", process.env.L_CHANNEL_ACCESS_TOKEN);
-
 const albumId = process.env.G_ALBUM_ID || '';
+const startDatetime = new Date(process.env.START_DATETIME || new Date());
+const endDatetime = new Date(process.env.END_DATETIME || new Date());
 
 const extractBody = (event: APIGatewayProxyEvent): any => {
   console.log("Received event:", JSON.stringify(event, null, 2));
@@ -31,21 +19,24 @@ const extractBody = (event: APIGatewayProxyEvent): any => {
   return body ? JSON.parse(body) : {};
 }
 
-const streamToBuffer = (stream: Readable): Promise<Buffer> => {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    stream.on('data', (chunk) => chunks.push(chunk));
-    stream.on('end', () => resolve(Buffer.concat(chunks)));
-    stream.on('error', reject);
-  });
-};
-
-const startDatetime = new Date(process.env.START_DATETIME || new Date());
-const endDatetime = new Date(process.env.END_DATETIME || new Date());
-
 const isWithinDatetimeRange = (): boolean => {
   const now = new Date();
   return endDatetime > now && now >= startDatetime;
+};
+
+const pollTranscodingStatus = async (line: Line, messageId: string, interval: number, maxAttempts: number): Promise<any> => {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const transcodingStatus = await line.getMessageContentTranscodingByMessageId(messageId);
+    if (transcodingStatus.status === 'succeeded') {
+      return transcodingStatus;
+    }
+    if (transcodingStatus.status === 'failed') {
+      break;
+    }
+    console.log(`Transcoding status is not succeeded (attempt ${attempt + 1}):`, transcodingStatus);
+    await new Promise(resolve => setTimeout(resolve, interval));
+  }
+  throw new Error('Transcoding did not succeed within the allowed attempts');
 };
 
 export const callback = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -60,6 +51,7 @@ export const callback = async (event: APIGatewayProxyEvent): Promise<APIGatewayP
   try {
     const google = new GoogleApi();
     const photo = new GooglePhotoApi();
+    const line = new Line();
 
     const jwt = await google.getAccessToken();
 
@@ -69,11 +61,18 @@ export const callback = async (event: APIGatewayProxyEvent): Promise<APIGatewayP
       if (event.message.type !== 'image' && event.message.type !== 'video') {
         continue;
       }
-      const imageStream = await client.getMessageContent(event.message.id);
-      const image = await streamToBuffer(imageStream);
+      if (event.message.type === 'video') {
+        try {
+          await pollTranscodingStatus(line, event.message.id, 3000, 20); // 3秒間隔、最大20回試行
+        } catch (error) {
+          console.log("Transcoding failed:", error.message);
+          continue;
+        }
+      }
+      const content = await line.getMessageContent(event.message.id);
       const mediaType = event.message.type === 'image' ? MediaType.IMAGE : MediaType.VIDEO;
       const timestamp = event.timestamp;
-      const uploadToken = await photo.uploadImage(jwt.access_token, timestamp, image, mediaType);
+      const uploadToken = await photo.uploadImage(jwt.access_token, timestamp, content, mediaType);
       uploadTokens.push(uploadToken);
     }
     if (uploadTokens.length > 0) {
