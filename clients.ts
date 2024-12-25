@@ -25,7 +25,8 @@ export const streamToBuffer = (stream: Readable): Promise<Buffer> => {
  * Class representing the LINE API client.
  */
 export class Line {
-  protected readonly client: line.messagingApi.MessagingApiBlobClient;
+  protected readonly blobClient: line.messagingApi.MessagingApiBlobClient;
+  protected readonly client: line.messagingApi.MessagingApiClient;
 
   constructor() {
 
@@ -36,11 +37,13 @@ export class Line {
     line.middleware(config)
 
     // create LINE SDK client
-    this.client = new line.messagingApi.MessagingApiBlobClient({
+    this.blobClient = new line.messagingApi.MessagingApiBlobClient({
       channelAccessToken: process.env.L_CHANNEL_ACCESS_TOKEN || ''
     });
     // console.log("L_CHANNEL_ACCESS_TOKEN", process.env.L_CHANNEL_ACCESS_TOKEN);
-
+    this.client = new line.messagingApi.MessagingApiClient({
+      channelAccessToken: process.env.L_CHANNEL_ACCESS_TOKEN || ''
+    });
   }
 
   /**
@@ -49,7 +52,7 @@ export class Line {
    * @returns A promise that resolves to a buffer containing the message content.
    */
   public async getMessageContent(messageId: string): Promise<Buffer> {
-    const stream = await this.client.getMessageContent(messageId);
+    const stream = await this.blobClient.getMessageContent(messageId);
     return streamToBuffer(stream);
   }
 
@@ -59,7 +62,16 @@ export class Line {
    * @returns A promise that resolves to the transcoded message content.
    */
   public async getMessageContentTranscodingByMessageId(messageId: string): Promise<any> {
-    return this.client.getMessageContentTranscodingByMessageId(messageId);
+    return this.blobClient.getMessageContentTranscodingByMessageId(messageId);
+  }
+
+  /**
+   * Retrieves the profile of a user by their ID.
+   * @param userId The ID of the user.
+   * @returns A promise that resolves to the user profile.
+   */
+  public async getProfile(userId: string): Promise<any> {
+    return this.client.getProfile(userId);
   }
 }
 
@@ -157,9 +169,9 @@ export class GooglePhotoApi extends HttpClient {
    * @param accessToken The access token.
    * @returns A promise that resolves to the response.
    */
-  public async addImagesToAlbum(accessToken: string, albumToken: string, imageTokens: string[]): Promise<any> {
+  public async addImagesToAlbum(accessToken: string, albumToken: string, imageTokens: string[], description: string): Promise<any> {
     const newMediaItems = imageTokens.map(token => ({
-      description: '',
+      description: description,
       simpleMediaItem: {
         uploadToken: token,
       },

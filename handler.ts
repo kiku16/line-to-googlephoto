@@ -9,6 +9,10 @@ const albumId = process.env.G_ALBUM_ID || '';
 const startDatetime = new Date(process.env.START_DATETIME || new Date());
 const endDatetime = new Date(process.env.END_DATETIME || new Date(new Date().getTime() + 60 * 60 * 1000));
 
+const google = new GoogleApi();
+const photo = new GooglePhotoApi();
+const line = new Line();
+
 /**
  * Extracts the body from the API Gateway event.
  * @param event The API Gateway event.
@@ -63,22 +67,23 @@ const pollTranscodingStatus = async (line: Line, messageId: string, interval: nu
  * @returns The API Gateway response.
  */
 export const callback = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  if (!isWithinDatetimeRange()) {
-    console.log("Request is outside of allowed datetime range");
-    return {
-      statusCode: 403,
-      body: JSON.stringify({ message: 'Request is outside of allowed datetime range' }),
-    };
-  }
 
   try {
-    const google = new GoogleApi();
-    const photo = new GooglePhotoApi();
-    const line = new Line();
+    const body = extractBody(event);
 
+    if (!isWithinDatetimeRange()) {
+      console.log("Request is outside of allowed datetime range");
+      return {
+        statusCode: 403,
+        body: JSON.stringify({ message: 'Request is outside of allowed datetime range' }),
+      };
+    }
+
+    const lineUserId = body.events[0].source.userId;
+    const profile = await line.getProfile(lineUserId);
+    
     const jwt = await google.getAccessToken();
 
-    const body = extractBody(event);
     const uploadTokens: string[] = [];
     for (const event of body.events) {
       if (event.message.type !== 'image' && event.message.type !== 'video') {
@@ -99,7 +104,7 @@ export const callback = async (event: APIGatewayProxyEvent): Promise<APIGatewayP
       uploadTokens.push(uploadToken);
     }
     if (uploadTokens.length > 0) {
-      const res = await photo.addImagesToAlbum(jwt.access_token, albumId, uploadTokens);
+      const res = await photo.addImagesToAlbum(jwt.access_token, albumId, uploadTokens, `${profile.displayName}さんが投稿`);
       console.log("res:", res);
     }
 
